@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Car Price Predictor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body class="bg-dark text-white">
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header text-center">
+            <h1 style="color: rgb(54, 53, 53); font-size: 2rem;" >CAR-PRICE-PREDICTOR</h1>
+        </div>
+        <div class="card-body">
+            <form id="predictForm" method="POST">
+                <div class="form-group">
+                    <label>Select Company</label>
+                    <select class="form-control" id="company" name="company" onchange="loadCarModels()" required>
+                        {% for company in companies %}
+                        <option value="{{ company }}">{{ company }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Model</label>
+                    <select class="form-control" id="car_models" name="car_models" required></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Year</label>
+                    <select class="form-control" name="year" required>
+                        {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Fuel Type</label>
+                    <select class="form-control" name="fuel_type" required>
+                        {% for fuel in fuel_types %}
+                        <option value="{{ fuel }}">{{ fuel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Kilometers Driven</label>
+                    <input type="number" class="form-control" name="kilo_driven" placeholder="Enter KM driven" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Predict Price</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <h4>Predicted Price: <span style="color: rgb(54, 53, 53);" id="prediction"></span></h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const companyModelMap = {{ company_model_map | tojson }};
+
+    function loadCarModels() {
+        const selectedCompany = document.getElementById("company").value;
+        const modelSelect = document.getElementById("car_models");
+        modelSelect.innerHTML = '';
+
+        if (selectedCompany in companyModelMap) {
+            const models = companyModelMap[selectedCompany];
+            models.forEach(model => {
+                const opt = document.createElement("option");
+                opt.value = model;
+                opt.text = model;
+                modelSelect.appendChild(opt);
+            });
+        }
+    }
+
+    // Auto trigger for first company
+    window.onload = loadCarModels;
+
+    // Submit handler
+    $("#predictForm").on("submit", function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: "/predict",
+            method: "POST",
+            data: $(this).serialize(),
+            success: function(response) {
+                $("#prediction").text("₹ " + response);
+            },
+            error: function() {
+                $("#prediction").text("Error predicting price.");
+            }
+        });
+    });
+</script>
+</body>
+</html>
